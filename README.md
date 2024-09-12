@@ -3,8 +3,9 @@
 Ever stared at your Git changes, wondering what to write? Say hello to
 `commitgen`, your AI-powered commit message genie! 🧞
 
-`commitgen` looks at your staged Git changes, waves its AI wand (powered by
-Ollama), and *poof!* – a shiny new commit message appears!
+`commitgen` analyzes your Git changes and crafts concise, purposeful commit
+messages. It aims for brevity (under 50 chars), uses imperative tone, and can
+provide context on what changed and why – all without you typing a word.
 
 ## Quick Start 🚀
 
@@ -42,7 +43,4 @@ Ollama), and *poof!* – a shiny new commit message appears!
 
 ## Contribute
 
-Got ideas to make `commitgen` even more magical? PRs welcome! Let's make Git
-commits fun again! 🎉
-
-Happy committing! 🎈
+Got ideas to make `commitgen` even more magical? PRs welcome! Happy committing! 🎈
