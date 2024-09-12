@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Function to display help
+show_help() {
+  echo "Usage: commitgen [options]"
+  echo "Options:"
+  echo "  --help        Show this help message."
+  echo "  --version     Show version information."
+  echo "  --model       Specify the model to use (default: llama3.1)"
+  exit 0
+}
+
+# Function to display version
+show_version() {
+  echo "commitgen version 1.0.0"
+  exit 0
+}
+
+# Default model
+model="llama3.1"
+
+# Check for --help, --version, and --model flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      show_help
+      ;;
+    --version)
+      show_version
+      ;;
+    --model)
+      if [[ -n "${2:-}" ]]; then
+        model="$2"
+        shift
+      else
+        echo "Error: --model requires an argument."
+        exit 1
+      fi
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_help
+      ;;
+  esac
+  shift
+done
+
+if ! command -v ollama &> /dev/null; then
+  echo "Error: Ollama is not installed. Please install Ollama."
+  exit 1
+fi
+
+if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+  echo "Error: This is not a Git repository. Please run this script inside a Git repository."
+  exit 1
+fi
+
+diff=$(git diff --cached)
+
+if [[ -z "$diff" ]]; then
+  echo "Error: No staged changes found. Please stage your changes using 'git add' first."
+  exit 1
+fi
+
+prompt=$(cat <<EOF
+You are a highly skilled Git expert and technical writer. Your task is to generate a clear, concise, and informative commit message based on the following Git diff.
+
+To ensure your commit message is well-structured and effective, follow these guidelines:
+
+Title/First line:
+- Keep it brief and specific (ideally under 50 characters).
+- Summarize the change in a way that quickly conveys its purpose.
+- Use an imperative tone (e.g., Fix, Add, Update).
+
+Description (optional but recommended for non-trivial changes):
+- What was changed: Explain the code change clearly, providing context for the
+modification.
+- Why the change was made: Highlight the problem being solved or the enhancement being introduced.
+- Avoid using lists
+
+Return only the commit message, without any additional explanations or formatting.
+
+$diff
+EOF
+)
+
+commit_message=$(ollama run "$model" "$prompt") || { echo "Error: Failed to generate commit message."; exit 1; }
+
+echo -e "\nGenerated commit message:\n"
+echo "$commit_message"
